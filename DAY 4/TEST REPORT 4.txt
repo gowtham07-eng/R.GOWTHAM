@@ -1,0 +1,8 @@
+  
+REPORT
+ 
+1. Total sales are 51M, with an average sale value of about 51.20K.
+2. Debit Card and UPI are the most used payment methods, followed by cash and credit card.
+3. Store and Online sales channels contribute almost equally to overall sales.
+4. Products like External Hard Disk, Camera, and Printer have the highest quantities sold.
+5. Sales vary by month and state, with some states like Assam, Telangana, and Gujarat showing higher sales.
