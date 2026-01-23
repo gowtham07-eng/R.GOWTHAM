@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Interactive Market Dashboard</title>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+header {
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filters select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #1e293b;
+  color: #fff;
+  border: none;
+  margin-left: 10px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.card {
+  background: #020617;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+h3 {
+  margin-bottom: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>📊 Market Dashboard</h1>
+  <div class="filters">
+    <select id="yearFilter"></select>
+    <select id="monthFilter"></select>
+  </div>
+</header>
+
+<main class="grid">
+  <div class="card">
+    <h3>Price Trend</h3>
+    <canvas id="priceChart"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Volume</h3>
+    <canvas id="volumeChart"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Daily Change %</h3>
+    <canvas id="changeChart"></canvas>
+  </div>
+</main>
+
+<script>
+/* ====== PASTE YOUR JSON DATA HERE ====== */
+const rawData = [
+  {"Date":"21/01/2026","Price":"13,978.00","Open":"12,935.55","High":"14,131.20","Low":"12,926.75","Vol.":"0.66K","Change %":"8.60%"},
+  {"Date":"20/01/2026","Price":"12,871.20","Open":"12,750.00","High":"13,269.90","Low":"12,636.10","Vol.":"2.98K","Change %":"2.21%"},
+  {"Date":"19/01/2026","Price":"12,593.25","Open":"12,449.95","High":"12,649.90","Low":"12,440.00","Vol.":"1.27K","Change %":"1.62%"}
+  // 🔁 keep adding rest of your JSON here
+];
+
+/* ====== UTILITIES ====== */
+const parseNum = v => Number(v.replace(/,/g,"").replace("%",""));
+const parseVol = v => parseNum(v.replace("K","")) * 1000;
+
+let priceChart, volumeChart, changeChart;
+
+const yearFilter = document.getElementById("yearFilter");
+const monthFilter = document.getElementById("monthFilter");
+
+/* ====== INIT FILTERS ====== */
+const cleanData = rawData.filter(d => d.Date);
+
+const years = [...new Set(cleanData.map(d => d.Date.split("/")[2]))];
+const months = [...new Set(cleanData.map(d => d.Date.split("/")[1]))];
+
+yearFilter.innerHTML =
+  `<option value="all">All Years</option>` +
+  years.map(y => `<option value="${y}">${y}</option>`).join("");
+
+monthFilter.innerHTML =
+  `<option value="all">All Months</option>` +
+  months.map(m => `<option value="${m}">${m}</option>`).join("");
+
+yearFilter.onchange = updateDashboard;
+monthFilter.onchange = updateDashboard;
+
+/* ====== FILTER DATA ====== */
+function getFilteredData() {
+  return cleanData.filter(d => {
+    const [dd, mm, yy] = d.Date.split("/");
+    return (yearFilter.value === "all" || yy === yearFilter.value) &&
+           (monthFilter.value === "all" || mm === monthFilter.value);
+  }).reverse();
+}
+
+/* ====== DRAW DASHBOARD ====== */
+function updateDashboard() {
+  const data = getFilteredData();
+
+  const labels = data.map(d => d.Date);
+  const prices = data.map(d => parseNum(d.Price));
+  const volumes = data.map(d => parseVol(d["Vol."]));
+  const changes = data.map(d => parseNum(d["Change %"]));
+
+  if (priceChart) priceChart.destroy();
+  if (volumeChart) volumeChart.destroy();
+  if (changeChart) changeChart.destroy();
+
+  priceChart = new Chart(priceChartCtx(), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Price",
+        data: prices,
+        borderWidth: 2,
+        tension: 0.4
+      }]
+    }
+  });
+
+  volumeChart = new Chart(volumeChartCtx(), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Volume",
+        data: volumes
+      }]
+    }
+  });
+
+  changeChart = new Chart(changeChartCtx(), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Change %",
+        data: changes
+      }]
+    }
+  });
+}
+
+function priceChartCtx() {
+  return document.getElementById("priceChart").getContext("2d");
+}
+function volumeChartCtx() {
+  return document.getElementById("volumeChart").getContext("2d");
+}
+function changeChartCtx() {
+  return document.getElementById("changeChart").getContext("2d");
+}
+
+updateDashboard();
+</script>
+
+</body>
+</html>
+
